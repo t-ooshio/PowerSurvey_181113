@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                                             xmlns:tools="http://schemas.android.com/tools"
+                                             android:layout_width="match_parent"
+                                             android:layout_height="match_parent"
+                                             tools:context="jp.sio.testapp.powersurvey.Activity.PowerSurveyActivity"
+                                             android:background="@android:color/background_dark">
+
+    <LinearLayout
+            android:id="@+id/btnLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+        <Button
+                android:id="@+id/buttonStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/locationStart"/>
+
+        <Button
+                android:id="@+id/buttonStop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/locationStop"
+                app:layout_constraintLeft_toRightOf="@+id/buttonStart"/>
+
+        <Button
+                android:id="@+id/buttonSetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/locationSetting"
+                app:layout_constraintLeft_toRightOf="@+id/buttonStop"/>
+
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/textViewSettingIndex"
+            android:text="設定"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/btnLayout"
+            android:background="@android:color/darker_gray"/>
+    <TextView
+            android:id="@+id/textViewSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textViewSettingIndex"
+            android:background="@android:color/darker_gray"/>
+    <TextView
+            android:id="@+id/textViewStateIndex"
+            android:text="実行状態"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textViewSetting" android:background="@android:color/darker_gray"/>
+    <TextView
+            android:id="@+id/textViewState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textViewStateIndex"
+            android:background="@android:color/darker_gray"/>
+    <TextView
+            android:id="@+id/textViewResultIndex"
+            android:text="測位結果"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textViewState" android:background="@android:color/darker_gray"/>
+    <TextView
+            android:id="@+id/textViewResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textViewResultIndex"
+            android:background="@android:color/darker_gray"/>
+
+</android.support.constraint.ConstraintLayout>
