@@ -45,4 +45,8 @@
     <string name="categoryColdStart">CategoryColdStart</string>
     <string name="categoryColdStop">CategoryColdStop</string>
     <string name="categoryServiceEnd">CategoryServiceEnd</string>
+    <string name="categoryWaitStartTimeEnd">waitStartTimeEnd</string>
+    <string name="categoryTrackingTimeEnd">trackingTimeEnd</string>
+    <string name="categoryIntervalTimeEnd">intervalTimeEnd</string>
+
 </resources>

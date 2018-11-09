@@ -55,14 +55,14 @@ public class SettingActivity extends AppCompatActivity {
         super.onResume();
     }
 
-    public void setWaitStartTime(long waittime){
-        editTextWaitStartTime.setText(Long.toString(waittime));
+    public void setWaitStartTime(int waittime){
+        editTextWaitStartTime.setText(Integer.toString(waittime));
     }
-    public void setTrackingTime(long trackingtime){
-        editTextTrackingTime.setText(Long.toString(trackingtime));
+    public void setTrackingTime(int trackingtime){
+        editTextTrackingTime.setText(Integer.toString(trackingtime));
     }
-    public void setIntervalTime(long interval){
-        editTextIntervalTime.setText(Long.toString(interval));
+    public void setIntervalTime(int interval){
+        editTextIntervalTime.setText(Integer.toString(interval));
     }
     public void setDelAssistDataTime(int delAssistDataTime){
         editTextDelAssistDataTime.setText(Integer.toString(delAssistDataTime));
@@ -83,20 +83,20 @@ public class SettingActivity extends AppCompatActivity {
         checkBoxisOutputLog.setChecked(false);
     }
 
-    public long getWaitStartTime(){
+    public int getWaitStartTime(){
         String waittime;
         waittime = editTextWaitStartTime.getText().toString();
-        return Long.parseLong(waittime);
+        return Integer.parseInt(waittime);
     }
-    public long getTrackingTime(){
+    public int getTrackingTime(){
         String trackingtime;
         trackingtime = editTextTrackingTime.getText().toString();
-        return Long.parseLong(trackingtime);
+        return Integer.parseInt(trackingtime);
     }
-    public long getIntervalTime(){
+    public int getIntervalTime(){
         String interval;
         interval = editTextIntervalTime.getText().toString();
-        return Long.parseLong(interval);
+        return Integer.parseInt(interval);
     }
     public int getDelAssistDataTime(){
         String delassistdatatime;

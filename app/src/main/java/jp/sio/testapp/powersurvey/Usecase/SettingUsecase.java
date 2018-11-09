@@ -30,13 +30,13 @@ public class SettingUsecase {
     }
 
     /*********************ここからSetter**********************/
-    public void setWaitStartTime(Long waittime){
+    public void setWaitStartTime(int waittime){
         settingPref.setWaitStartTime(waittime);
     }
-    public void setIntervalTime(long interval){
+    public void setIntervalTime(int interval){
         settingPref.setIntervalTime(interval);
     }
-    public void setTrackingTime(long trackingtime){
+    public void setTrackingTime(int trackingtime){
         settingPref.setTrackingTime(trackingtime);
     }
     public void setDelAssistDataTime(int delAssistDataTime){
@@ -58,13 +58,13 @@ public class SettingUsecase {
     public String getLocationType(){
         return settingPref.getLocationType();
     }
-    public long getWaitStartTime(){
+    public int getWaitStartTime(){
         return settingPref.getWaitStartTime();
     }
-    public long getTrackingTime(){
+    public int getTrackingTime(){
         return settingPref.getTrackingTime();
     }
-    public long getIntervalTime(){
+    public int getIntervalTime(){
         return settingPref.getIntervalTime();
     }
     public boolean getIsCold(){

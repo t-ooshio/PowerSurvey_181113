@@ -18,9 +18,9 @@ public class SettingPref {
     private Context context;
 
     //Default設定
-    private final long defWaitStartTime = 300;
-    private final long defTrackingTime = 120;
-    private final long defIntervalTime = 300;
+    private final int defWaitStartTime = 300;
+    private final int defTrackingTime = 120;
+    private final int defIntervalTime = 300;
     private final boolean defIsCold = true;
     private final int defSuplEndWaitTime = 0;
     private final int defDelAssistDataTime = 3;
@@ -45,17 +45,17 @@ public class SettingPref {
         L.d("SettingPrefLocationType:" + locationType);
         commitSetting();
     }
-    public void setWaitStartTime(long waittime){
-        editor.putLong(context.getString(R.string.settingWaitStart),waittime);
+    public void setWaitStartTime(int waittime){
+        editor.putInt(context.getString(R.string.settingWaitStart),waittime);
         commitSetting();
     }
-    public void setTrackingTime(long timeout){
-        editor.putLong(context.getString(R.string.settingTrackingTime),timeout);
+    public void setTrackingTime(int timeout){
+        editor.putInt(context.getString(R.string.settingTrackingTime),timeout);
         commitSetting();
     }
 
-    public void setIntervalTime(long interval){
-        editor.putLong(context.getString(R.string.settingInterval),interval);
+    public void setIntervalTime(int interval){
+        editor.putInt(context.getString(R.string.settingInterval),interval);
         commitSetting();
     }
     public void setIsCold(boolean isCold){
@@ -74,15 +74,14 @@ public class SettingPref {
     public String getLocationType(){
         return settingPref.getString(context.getResources().getString(R.string.settingLocationType),defLocationType);
     }
-    public long getWaitStartTime(){
-        L.d(settingPref.getLong(context.getString(R.string.settingWaitStart),defWaitStartTime) + "");
-        return settingPref.getLong(context.getString(R.string.settingWaitStart),defWaitStartTime);
+    public int getWaitStartTime(){
+        return settingPref.getInt(context.getString(R.string.settingWaitStart),defWaitStartTime);
     }
-    public long getIntervalTime(){
-        return settingPref.getLong(context.getString(R.string.settingInterval),defIntervalTime);
+    public int getIntervalTime(){
+        return settingPref.getInt(context.getString(R.string.settingInterval),defIntervalTime);
     }
-    public long getTrackingTime(){
-        return settingPref.getLong(context.getString(R.string.settingTrackingTime),defTrackingTime);
+    public int getTrackingTime(){
+        return settingPref.getInt(context.getString(R.string.settingTrackingTime),defTrackingTime);
     }
     public boolean getIsCold(){
         return settingPref.getBoolean(context.getString(R.string.settingIsCold),defIsCold);
