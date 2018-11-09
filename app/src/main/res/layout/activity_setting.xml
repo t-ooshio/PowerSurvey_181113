@@ -1,115 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="jp.sio.testapp.powersurvey.Activity.SettingActivity">
+                                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                                             xmlns:tools="http://schemas.android.com/tools"
+                                             android:layout_width="match_parent"
+                                             android:layout_height="match_parent"
+                                             tools:context="jp.sio.testapp.powersurvey.Activity.SettingActivity"
+                                             android:background="@android:color/background_dark">
 
     <ScrollView
-        android:layout_width="368dp"
-        android:layout_height="wrap_content"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="0dp"
-        tools:ignore="MissingConstraints">
+            android:layout_width="368dp"
+            android:layout_height="wrap_content"
+            tools:layout_editor_absoluteX="8dp"
+            tools:layout_editor_absoluteY="0dp"
+            tools:ignore="MissingConstraints">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/textViewLocationList"
-                android:text="@string/locationList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <RadioGroup
-                android:id="@+id/radiogroupPositioningType"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@+id/textViewLocationList"
-                >
+                android:orientation="vertical">
+            <TextView
+                    android:id="@+id/textViewLocationList"
+                    android:text="@string/locationList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            <RadioGroup
+                    android:id="@+id/radiogroupPositioningType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewLocationList"
+                    android:background="@android:color/white">
 
                 <RadioButton
                         android:id="@+id/rbTracking"
                         android:text="@string/locationTracking"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"/>
 
             </RadioGroup>
             <TextView
-                android:id="@+id/textViewWaitStartTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settingWaitStart"
-                app:layout_constraintTop_toBottomOf="@+id/radiogroupPositioningType"
-                />
+                    android:id="@+id/textViewWaitStartTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settingWaitStart"
+                    app:layout_constraintTop_toBottomOf="@+id/radiogroupPositioningType"
+                    android:background="@android:color/darker_gray"/>
 
             <EditText
-                android:id="@+id/editTextWaitStartTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="開始ボタンを押してからTracking開始までの時間(秒)"
-                android:inputType="number|numberSigned|numberDecimal"
-                app:layout_constraintTop_toBottomOf="@+id/textViewWaitStartTime" />
+                    android:id="@+id/editTextWaitStartTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="開始ボタンを押してからTracking開始までの時間(秒)"
+                    android:inputType="number|numberSigned|numberDecimal"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewWaitStartTime"
+                    android:background="@android:color/white"/>
 
             <TextView
-                android:id="@+id/textViewTrackingTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settingTrackingTime"
-                app:layout_constraintTop_toBottomOf="@+id/editTextWaitStartTime" />
+                    android:id="@+id/textViewTrackingTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settingTrackingTime"
+                    app:layout_constraintTop_toBottomOf="@+id/editTextWaitStartTime"
+                    android:background="@android:color/darker_gray"/>
 
             <EditText
-                android:id="@+id/editTextTrackingTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Tracking実施時間(秒)"
-                android:inputType="number|numberSigned|numberDecimal"
-                app:layout_constraintTop_toBottomOf="@+id/textViewTrackingTime" />
+                    android:id="@+id/editTextTrackingTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tracking実施時間(秒)"
+                    android:inputType="number|numberSigned|numberDecimal"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewTrackingTime"
+                    android:background="@android:color/white"/>
 
             <TextView
-                android:id="@+id/textViewIntervalTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settingInterval"
-                app:layout_constraintTop_toBottomOf="@+id/editTextTrackingTime" />
+                    android:id="@+id/textViewIntervalTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settingInterval"
+                    app:layout_constraintTop_toBottomOf="@+id/editTextTrackingTime"
+                    android:background="@android:color/darker_gray"/>
 
             <EditText
-                android:id="@+id/editTextIntervalTime"
-                android:layout_width="match_parent"
-                android:hint="Tracking終了から次のTracking開始までの時間(秒)"
-                android:layout_height="wrap_content"
-                android:inputType="number|numberSigned|numberDecimal"
-                app:layout_constraintTop_toBottomOf="@+id/textViewIntervalTime" />
+                    android:id="@+id/editTextIntervalTime"
+                    android:layout_width="match_parent"
+                    android:hint="Tracking終了から次のTracking開始までの時間(秒)"
+                    android:layout_height="wrap_content"
+                    android:inputType="number|numberSigned|numberDecimal"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewIntervalTime"
+                    android:background="@android:color/white"/>
 
             <TextView
-                android:id="@+id/textViewDelAssistDataTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settingDelAssistdataTime"
-                app:layout_constraintTop_toBottomOf="@+id/editTextIntervalTime" />
+                    android:id="@+id/textViewDelAssistDataTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settingDelAssistdataTime"
+                    app:layout_constraintTop_toBottomOf="@+id/editTextIntervalTime"
+                    android:background="@android:color/darker_gray"/>
 
             <EditText
-                android:id="@+id/editTextDelAssistDataTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="アシストデータ削除コマンド実行後の待ち時間(秒)"
-                android:inputType="number|numberSigned|numberDecimal"
-                app:layout_constraintTop_toBottomOf="@+id/textViewDelAssistDataTime" />
+                    android:id="@+id/editTextDelAssistDataTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="アシストデータ削除コマンド実行後の待ち時間(秒)"
+                    android:inputType="number|numberSigned|numberDecimal"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewDelAssistDataTime"
+                    android:background="@android:color/white"/>
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
                 <TextView
-                    android:id="@+id/textViewDelAssistData"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settingActIsCold" />
+                        android:id="@+id/textViewDelAssistData"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settingActIsCold"
+                        android:background="@android:color/white"/>
                 <CheckBox
-                    android:id="@+id/checkboxIsDelAssistData"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                        android:id="@+id/checkboxIsDelAssistData"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/white"/>
             </LinearLayout>
             <LinearLayout
                     android:layout_width="match_parent"
@@ -119,12 +129,14 @@
                         android:id="@+id/textViewIsOutputLog"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/settingIsOutputLog"/>
+                        android:text="@string/settingIsOutputLog"
+                        android:background="@android:color/white"/>
 
                 <CheckBox
                         android:id="@+id/checkboxIsOutputLog"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/white"/>
 
             </LinearLayout>
 

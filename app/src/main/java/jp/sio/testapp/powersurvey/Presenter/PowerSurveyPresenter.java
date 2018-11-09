@@ -69,7 +69,6 @@ public class PowerSurveyPresenter {
         public void onServiceDisconnected(ComponentName componentName) {
             activity.unbindService(runService);
             trackingService = null;
-
         }
     };
 
@@ -101,27 +100,29 @@ public class PowerSurveyPresenter {
 
     public void locationStart(){
         IntentFilter filter = null;
+        //試験設定の読み込み
         getSetting();
         L.d(locationType + "," + waitStartTime + "," + trackingTime
                 + "," + intervalTime + "," + delassisttime + "," + isCold
                 + "," + isOutputLog);
-        //ログファイルの生成
-        locationLog = new LocationLog(activity);
-        L.d("before_makeLogFile");
-        L.d(settingHeader);
-        locationLog.makeLogFile(settingHeader);
-        locationLog.writeLog(
-                locationType + "," + waitStartTime + "," + trackingTime
-                        + "," + intervalTime + "," + delassisttime + "," + isCold
-                        + "," + isOutputLog);
-        locationLog.writeLog(locationHeader);
 
+        //ログファイルの生成
+        if(isOutputLog) {
+            locationLog = new LocationLog(activity);
+            L.d("before_makeLogFile");
+            L.d(settingHeader);
+            locationLog.makeLogFile(settingHeader);
+            locationLog.writeLog(
+                    locationType + "," + waitStartTime + "," + trackingTime
+                            + "," + intervalTime + "," + delassisttime + "," + isCold
+                            + "," + isOutputLog);
+            locationLog.writeLog(locationHeader);
+        }
         activity.showTextViewSetting("測位方式:" + locationType + "\n" + "開始待ち時間:" + waitStartTime + "\n"
                 + "TRACKING実行時間:" + trackingTime + "\n"
-                +  "測位間隔:" + intervalTime + "\n" + "Cold:" + isCold + "\n"
+                + "測位間隔:" + intervalTime + "\n" + "アシストデータ削除:" + isCold + "\n"
                 + "アシストデータ削除時間:" + delassisttime + "\n"
-                + "ログ出力:" + isOutputLog + "\n" );
-
+                + "ログ出力:" + isOutputLog + "\n");
 
         if(locationType.equals(activity.getResources().getString(R.string.locationTracking))) {
             locationserviceIntent = new Intent(activity.getApplicationContext(), TrackingService.class);
@@ -166,7 +167,6 @@ public class PowerSurveyPresenter {
                 e.printStackTrace();
             }
         }
-
 
         //Service1の停止
         L.d("Serviceの停止");
@@ -232,6 +232,7 @@ public class PowerSurveyPresenter {
             Bundle bundle = intent.getExtras();
             receiveCategory = bundle.getString(activity.getResources().getString(R.string.category));
 
+            //Serviceから測位結果を受け取り
             if (receiveCategory.equals(categoryLocation)) {
                 location = bundle.getParcelable(activity.getResources().getString(R.string.TagLocation));
                 isFix = bundle.getBoolean(activity.getResources().getString(R.string.TagisFix));
@@ -252,11 +253,13 @@ public class PowerSurveyPresenter {
                 L.d("onReceive");
                 L.d(locationStarttime + "," + locationStoptime + "," + isFix + "," + lattude + "," + longitude + "," + ttff + ","
                         + fixtimeEpoch + "," + fixtimeUTC + "\n");
-                locationLog.writeLog(
-                        locationStarttime + "," + locationStoptime + "," + isFix + "," + location.getLatitude() + "," + location.getLongitude()
-                                + "," + ttff + "," + location.getAccuracy() + "," + fixtimeEpoch + "," + fixtimeUTC);
-
-                activity.showTextViewResult("測位成否：" + isFix + "\n" + "緯度:" + lattude + "\n" + "経度:" + longitude + "\n" + "TTFF：" + ttff
+                //ログ出力あり設定の場合ログに結果書き込み
+                if(isOutputLog) {
+                    locationLog.writeLog(
+                            locationStarttime + "," + locationStoptime + "," + isFix + "," + location.getLatitude() + "," + location.getLongitude()
+                                    + "," + ttff + "," + location.getAccuracy() + "," + fixtimeEpoch + "," + fixtimeUTC);
+                }
+                activity.showTextViewResult("測位成否：" + isFix + "\n" + "緯度:" + lattude + "\n" + "経度:" + longitude + "\n" + "経過時間：" + ttff
                         + "\n" + "fixTimeEpoch:" + fixtimeEpoch + "\n" + "fixTimeUTC:" + fixtimeUTC + "\n");
 
                 activity.showTextViewState(activity.getResources().getString(R.string.locationWait));

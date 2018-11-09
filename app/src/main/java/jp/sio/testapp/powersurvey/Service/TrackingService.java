@@ -27,16 +27,19 @@ import java.util.TimerTask;
 public class TrackingService extends Service implements LocationListener {
 
     private LocationManager locationManager;
-    private LocationLog locationLog;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
 
     private Handler resultHandler;
     private Handler intervalHandler;
     private Handler stopHandler;
-    private Timer stopTimer;
+
+    private Timer waitStartTimer;
+    private Timer trackingTimer;
     private Timer intervalTimer;
-    private StopTimerTask stopTimerTask;
+
+    private WaitStartTimerTask waitStartTimerTask;
+    private TrackingTimerTask trakcingTimerTask;
     private IntervalTimerTask intervalTimerTask;
 
     //設定値の格納用変数
@@ -52,6 +55,9 @@ public class TrackingService extends Service implements LocationListener {
 
     //測位完了までの時間 TTFF
     private double ttff;
+
+    //アシストデータ削除処理用 最初の1回目のTrackingフラグ
+    private boolean is1stTracking = true;
 
     //測位成功の場合:true 測位失敗の場合:false を設定
     private boolean isLocationFix;
@@ -105,7 +111,13 @@ public class TrackingService extends Service implements LocationListener {
         runningCount = 0;
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationStart();
+
+        //このタイマー満了後、locationStartが呼ばれて測位開始
+        L.d("before waitStartTimer");
+        waitStartTimerTask = new WaitStartTimerTask();
+        waitStartTimer = new Timer(true);
+        waitStartTimer.schedule(waitStartTimerTask, settingWaitStartTime);
+        L.d("after waitStartTimer");
 
         return START_STICKY;
     }
@@ -117,21 +129,21 @@ public class TrackingService extends Service implements LocationListener {
 
         L.d("locationStart");
 
-        if (settingIsCold) {
+        if (settingIsCold && is1stTracking) {
             coldLocation(locationManager);
         }
         locationStartTime = System.currentTimeMillis();
         //MyLocationUsecaseで起動時にPermissionCheckを行っているのでここでは行わない
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         L.d("requestLocationUpdates");
+        is1stTracking = false;
+        //Tracking停止Timerの設定
+        L.d("before trackingTimer");
+        trakcingTimerTask = new TrackingTimerTask();
+        trackingTimer = new Timer(true);
+        trackingTimer.schedule(trakcingTimerTask,settingTrackingTime);
+        L.d("after trackingTimer");
 
-        //測位停止Timerの設定
-        /*
-        L.d("SetStopTimer");
-        stopTimerTask = new StopTimerTask();
-        stopTimer = new Timer(true);
-        stopTimer.schedule(stopTimerTask, settingTimeout);
-        */
     }
 
     /**
@@ -159,7 +171,7 @@ public class TrackingService extends Service implements LocationListener {
                 sendLocationBroadCast(isLocationFix, location, locationStartTime, locationStopTime);
             }
         });
-        L.d(location.getLatitude() + " " + location.getLongitude());
+        L.d(location.getLatitude() + "," + location.getLongitude());
         /*
         try {
             Thread.sleep(settingSuplEndWaitTime);
@@ -195,7 +207,7 @@ public class TrackingService extends Service implements LocationListener {
      * 測位失敗の場合の処理
      * 今のところタイムアウトした場合のみを想定
      */
-    public void locationFailed() {
+    public void locationStop() {
         L.d("locationFailed");
         //測位終了の時間を取得
         locationStopTime = System.currentTimeMillis();
@@ -204,8 +216,8 @@ public class TrackingService extends Service implements LocationListener {
         locationManager.removeUpdates(this);
         ttff = (double) (locationStopTime - locationStartTime) / 1000;
 
-        if (stopTimer != null) {
-            stopTimer = null;
+        if (trackingTimer != null) {
+            trackingTimer = null;
         }
         //測位結果の通知
         resultHandler.post(new Runnable() {
@@ -216,6 +228,11 @@ public class TrackingService extends Service implements LocationListener {
                 sendLocationBroadCast(isLocationFix, location, locationStartTime, locationStopTime);
             }
         });
+        L.d("before intervalTimer");
+        intervalTimerTask = new IntervalTimerTask();
+        intervalTimer = new Timer(true);
+        intervalTimer.schedule(intervalTimerTask,settingIntervalTime);
+        L.d("after intervalTimer");
     }
 
     /**
@@ -228,9 +245,14 @@ public class TrackingService extends Service implements LocationListener {
             locationManager.removeUpdates(this);
             locationManager = null;
         }
-        if (stopTimer != null) {
-            stopTimer.cancel();
-            stopTimer = null;
+        if (waitStartTimer != null) {
+            waitStartTimer.cancel();
+            waitStartTimer = null;
+        }
+
+        if (trackingTimer != null) {
+            trackingTimer.cancel();
+            trackingTimer = null;
         }
         if (intervalTimer != null) {
             intervalTimer.cancel();
@@ -287,18 +309,36 @@ public class TrackingService extends Service implements LocationListener {
     }
 
     /**
-     * 測位停止タイマー
-     * 測位タイムアウトしたときの処理
+     * 開始待ちタイマー
+     * 開始ボタンを押してから画面をOFFして諸々の端末の動作がおとなしくなるのを待つためのTimer
      */
-    class StopTimerTask extends TimerTask {
+    class WaitStartTimerTask extends TimerTask {
+
+        @Override
+        public void run() {
+            intervalHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    L.d("WaitStartTimerTask");
+                    locationStart();
+                }
+            });
+        }
+    }
+
+    /**
+     * Tracking停止タイマー
+     * Tracking測位を行う時間を満了したときの処理
+     */
+    class TrackingTimerTask extends TimerTask {
 
         @Override
         public void run() {
             stopHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    L.d("StopTimerTask");
-                    locationFailed();
+                    L.d("TrackingTimerTask");
+                    locationStop();
                 }
             });
         }
@@ -321,6 +361,8 @@ public class TrackingService extends Service implements LocationListener {
             });
         }
     }
+
+
 
     /**
      * 測位完了を上に通知するBroadcast 測位結果を入れる
