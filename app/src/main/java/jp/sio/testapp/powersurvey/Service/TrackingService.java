@@ -39,35 +39,35 @@ public class TrackingService extends Service implements LocationListener {
     private Timer trackingTimer;
     private Timer intervalTimer;
 
-    private WaitStartTimerTask waitStartTimerTask;
-    private TrackingTimerTask trakcingTimerTask;
-    private IntervalTimerTask intervalTimerTask;
+    private  WaitStartTimerTask waitStartTimerTask;
+    private  TrackingTimerTask trakcingTimerTask;
+    private  IntervalTimerTask intervalTimerTask;
 
     //設定値の格納用変数
-    private final String locationType = "TRACKING";
-    private int settingWaitStartTime;
-    private int settingTrackingTime;
-    private int settingIntervalTime;
-    private boolean settingIsCold;
-    private int settingDelAssistdatatime;
-    private boolean settingIsOutputLog;
+    private  final String locationType = "TRACKING";
+    private  int settingWaitStartTime;
+    private  int settingTrackingTime;
+    private  int settingIntervalTime;
+    private  boolean settingIsCold;
+    private  int settingDelAssistdatatime;
+    private  boolean settingIsOutputLog;
     //測位中の測位回数
-    private int runningCount;
+    private  int runningCount;
 
     //測位完了までの時間 TTFF
-    private double ttff;
+    private  double ttff;
 
     //アシストデータ削除処理用 最初の1回目のTrackingフラグ
-    private boolean is1stTracking = true;
+    private  boolean is1stTracking = true;
 
     //測位成功の場合:true 測位失敗の場合:false を設定
-    private boolean isLocationFix;
+    private  boolean isLocationFix;
 
     //測位開始時間、終了時間
-    private long locationStartTime;
-    private long locationStopTime;
+    private  long locationStartTime;
+    private  long locationStopTime;
 
-    private String receiveCategory;
+    private  String receiveCategory;
 
     public class TrackingService_Binder extends Binder {
         public TrackingService getService() {
@@ -91,46 +91,49 @@ public class TrackingService extends Service implements LocationListener {
         super.onStartCommand(intent, flags, startid);
         L.d("onStartCommand");
 
-        //サービスがKillされるのを防止する処理
-        //サービスがKillされにくくするために、Foregroundで実行する
-        startForeground();
+        String extra = "";
+        if(intent != null) {
+            extra = intent.getStringExtra("method");
+            if(extra == null){
+                extra = "";
+            }
+        }
 
-        //画面が消灯しないようにする処理
-        //画面が消灯しないようにPowerManagerを使用
-        // *** 消費電流測定用としてTrackingでは使わないようにしてみる ***/
-        //powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        //PowerManagerの画面つけっぱなし設定SCREEN_BRIGHT_WAKE_LOCK、非推奨の設定値だが試験アプリ的にはあったほうがいいので使用
-        //wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getString(R.string.locationTracking));
-        //wakeLock.acquire();
+        if(extra.equals("locationStart")){
+            L.d("onStartCommand_locationStart");
+            locationStart();
+        }else if(extra.equals("locationStop")){
+            L.d("onStartCommand_locationStop");
+            locationStop();
+        }else {
 
-        //設定値の取得
-        // *1000は sec → msec の変換
-        settingWaitStartTime = intent.getIntExtra(this.getString(R.string.settingWaitStart), 0) * 1000;
-        settingTrackingTime = intent.getIntExtra(this.getString(R.string.settingTrackingTime), 0) * 1000;
-        settingIntervalTime = intent.getIntExtra(this.getString(R.string.settingInterval), 0) * 1000;
-        settingIsCold = intent.getBooleanExtra(this.getString(R.string.settingIsCold), true);
-        settingDelAssistdatatime = intent.getIntExtra(this.getString(R.string.settingDelAssistdataTime), 0) * 1000;
-        settingIsOutputLog = intent.getBooleanExtra(this.getString(R.string.settingIsOutputLog),true);
-        runningCount = 0;
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            //サービスがKillされるのを防止する処理
+            //サービスがKillされにくくするために、Foregroundで実行する
+            startForeground();
 
-        //このタイマー満了後、locationStartが呼ばれて測位開始
+            //設定値の取得
+            // *1000は sec → msec の変換
+            settingWaitStartTime = intent.getIntExtra(this.getString(R.string.settingWaitStart), 0);
+            settingTrackingTime = intent.getIntExtra(this.getString(R.string.settingTrackingTime), 0);
+            settingIntervalTime = intent.getIntExtra(this.getString(R.string.settingInterval), 0);
+            settingIsCold = intent.getBooleanExtra(this.getString(R.string.settingIsCold), true);
+            settingDelAssistdatatime = intent.getIntExtra(this.getString(R.string.settingDelAssistdataTime), 0) * 1000;
+            settingIsOutputLog = intent.getBooleanExtra(this.getString(R.string.settingIsOutputLog), true);
+            runningCount = 0;
 
-//        L.d("before waitStartTimer");
-//        waitStartTimerTask = new WaitStartTimerTask();
-//        waitStartTimer = new Timer(true);
-//        waitStartTimer.schedule(waitStartTimerTask, settingWaitStartTime);
-//        L.d("after waitStartTimer");
-        L.d("setWaitStartAlarm実行前");
-        setWaitStartAlarm(10);
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            L.d("setWaitStartAlarm実行前");
+            setWaitStartAlarm(settingWaitStartTime);
+        }
         return START_STICKY;
     }
 
     /**
      * 測位を開始する時の処理
      */
-    public void locationStart() {
+    public  void locationStart() {
 
         L.d("locationStart");
 
@@ -142,30 +145,17 @@ public class TrackingService extends Service implements LocationListener {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         L.d("requestLocationUpdates");
         is1stTracking = false;
-        //Tracking停止Timerの設定
-//        L.d("before trackingTimer");
-//        trakcingTimerTask = new TrackingTimerTask();
-//        trackingTimer = new Timer(true);
-//        trackingTimer.schedule(trakcingTimerTask,settingTrackingTime);
-//        L.d("after trackingTimer");
+        setTrackingAlarm(settingTrackingTime);
 
     }
 
     /**
      * 測位成功の場合の処理
      */
-    public void locationSuccess(final Location location) {
+    public  void locationSuccess(final Location location) {
         L.d("locationSuccess");
         //測位終了の時間を取得
         locationStopTime = System.currentTimeMillis();
-        //測位タイムアウトのタイマーをクリア
-        /*
-        if (stopTimer != null) {
-            stopTimer.cancel();
-            stopTimer = null;
-        }
-        */
-        //runningCount++;
         isLocationFix = true;
         ttff = (double) (locationStopTime - locationStartTime) / 1000;
         //測位結果の通知
@@ -177,42 +167,14 @@ public class TrackingService extends Service implements LocationListener {
             }
         });
         L.d(location.getLatitude() + "," + location.getLongitude());
-        /*
-        try {
-            Thread.sleep(settingSuplEndWaitTime);
-        } catch (InterruptedException e) {
-            L.d(e.getMessage());
-            e.printStackTrace();
-        }
-        if (locationManager != null) {
-            locationManager.removeUpdates(this);
-        }
-        */
 
-        //測位回数が設定値に到達しているかチェック
-        /*
-        if (runningCount == settingCount && settingCount != 0) {
-            serviceStop();
-        } else {
-            //回数満了してなければ測位間隔Timerを設定して次の測位の準備
-            L.d("SuccessのIntervalTimer");
-            if (intervalTimer != null) {
-                intervalTimer.cancel();
-                intervalTimer = null;
-            }
-            intervalTimerTask = new IntervalTimerTask();
-            intervalTimer = new Timer();
-            L.d("Interval:" + settingInterval);
-            intervalTimer.schedule(intervalTimerTask, settingInterval);
-        }
-        */
     }
 
     /**
      * 測位失敗の場合の処理
      * 今のところタイムアウトした場合のみを想定
      */
-    public void locationStop() {
+    public  void locationStop() {
         L.d("locationFailed");
         //測位終了の時間を取得
         locationStopTime = System.currentTimeMillis();
@@ -233,11 +195,7 @@ public class TrackingService extends Service implements LocationListener {
                 sendLocationBroadCast(isLocationFix, location, locationStartTime, locationStopTime);
             }
         });
-//        L.d("before intervalTimer");
-//        intervalTimerTask = new IntervalTimerTask();
-//        intervalTimer = new Timer(true);
-//        intervalTimer.schedule(intervalTimerTask,settingIntervalTime);
-//        L.d("after intervalTimer");
+        setIntervalAlarm(settingIntervalTime);
     }
 
     /**
@@ -282,11 +240,6 @@ public class TrackingService extends Service implements LocationListener {
         //locationChangeCount++;
         //L.d("onLocationChanged," + "locationChangeCount:" + locationChangeCount);
         locationSuccess(location);
-        /*
-        if(locationChangeCount == 1){
-            locationSuccess(location);
-        }
-        */
     }
 
     @Override
@@ -299,7 +252,7 @@ public class TrackingService extends Service implements LocationListener {
     /**
      * アシストデータの削除
      */
-    private void coldLocation(LocationManager lm) {
+    private  void coldLocation(LocationManager lm) {
         sendColdBroadCast(getResources().getString(R.string.categoryColdStart));
         L.d("coldBroadcast:" + getResources().getString(R.string.categoryColdStart));
         lm.sendExtraCommand(LocationManager.GPS_PROVIDER, "delete_aiding_data", null);
@@ -326,6 +279,7 @@ public class TrackingService extends Service implements LocationListener {
                 public void run() {
                     L.d("WaitStartTimerTask");
                     locationStart();
+
                 }
             });
         }
@@ -446,12 +400,9 @@ public class TrackingService extends Service implements LocationListener {
         calender.setTimeInMillis(System.currentTimeMillis());
         calender.add(calender.SECOND,waitStartTime);
 
-        //Intent intent = new Intent(getApplicationContext(),TrackingAlarmReceiver.class);
-        //Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.LocationReceiver.class);
         L.d("Intent前");
-        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.class);
-        intent.putExtra(getResources().getString(R.string.category),getResources().getString(R.string.categoryWaitStartTimeEnd));
-
+        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
+        intent.setAction("waitStartTimerEnd");
         PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
         AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         if(am != null){
@@ -461,42 +412,35 @@ public class TrackingService extends Service implements LocationListener {
     }
 
     private void setTrackingAlarm(int trackingTime){
+        L.d("setTrackingAlarm実行開始");
         Calendar calender = Calendar.getInstance();
         calender.setTimeInMillis(System.currentTimeMillis());
         calender.add(calender.SECOND,trackingTime);
 
-        //Intent intent = new Intent(getApplicationContext(),TrackingAlarmReceiver.class);
-        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.class);
-        intent.setAction(getResources().getString(R.string.categoryTrackingTimeEnd));
+        L.d("Intent前");
+        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
+        intent.setAction("trackingTimerEnd");
         PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
         AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         if(am != null){
             am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), pending);
-            L.d("setWaitStartAlarm");
+            L.d("trackingTimer");
         }
     }
     private void setIntervalAlarm(int intervalTime){
+        L.d("setIntervalAlarm実行開始");
         Calendar calender = Calendar.getInstance();
         calender.setTimeInMillis(System.currentTimeMillis());
         calender.add(calender.SECOND,intervalTime);
 
-        //Intent intent = new Intent(getApplicationContext(),TrackingAlarmReceiver.class);
-        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.class);
-        intent.setAction(getResources().getString(R.string.categoryIntervalTimeEnd));
+        L.d("Intent前");
+        Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
+        intent.setAction("intervalTImeEnd");
         PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
         AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         if(am != null){
             am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), pending);
-            L.d("setWaitStartAlarm");
-        }
-    }
-
-    private class TimerReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //Serviceから測位結果を受け取り
-            L.d("OnReceive");
+            L.d("IntervalTimer");
         }
     }
 

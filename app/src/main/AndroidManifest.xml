@@ -28,8 +28,8 @@
         </activity>
 
         <service android:name=".Service.TrackingService"></service>
-        <receiver android:name=".Presenter.PowerSurveyPresenter"></receiver>
-
+        <receiver android:name=".Presenter.PowerSurveyPresenter$LocationReceiver"></receiver>
+        <receiver android:name=".Presenter.PowerSurveyPresenter$TimerReceiver"></receiver>
     </application>
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>

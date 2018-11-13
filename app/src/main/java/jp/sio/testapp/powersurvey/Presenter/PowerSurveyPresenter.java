@@ -32,7 +32,7 @@ import jp.sio.testapp.powersurvey.Repository.LocationLog;
  * Activityはなるべく描画だけに専念させたいから分けるため
  */
 
-public class PowerSurveyPresenter extends BroadcastReceiver{
+public class PowerSurveyPresenter{
     private PowerSurveyActivity activity;
     private SettingUsecase settingUsecase;
     private PowerSurverUsecase powerSurverUsecase;
@@ -60,18 +60,6 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
     private String settingHeader;
     private String locationHeader;
 
-    private Boolean isFix;
-    private double lattude, longitude, ttff;
-    private long fixtimeEpoch;
-    private String fixtimeUTC;
-    private String locationStarttime, locationStoptime;
-
-    private Location location = new Location(LocationManager.GPS_PROVIDER);
-    private SimpleDateFormat fixTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZ");
-    private SimpleDateFormat simpleDateFormatHH = new SimpleDateFormat("HH:mm:ss.SSS");
-    private LocalBroadcastManager manager;
-
-
     private ServiceConnection serviceConnectionTracking = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
@@ -85,7 +73,8 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
         }
     };
 
-    //private final LocationReceiver locationReceiver = new LocationReceiver();
+    private final LocationReceiver locationReceiver = new LocationReceiver();
+    private final TimerReceiver timerReceiver = new TimerReceiver();
 
     public PowerSurveyPresenter(PowerSurveyActivity activity){
         this.activity = activity;
@@ -99,9 +88,7 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
         settingHeader = activity.getResources().getString(R.string.settingHeader) ;
         locationHeader =activity. getResources().getString(R.string.locationHeader);
 
-        manager = LocalBroadcastManager.getInstance(activity.getApplicationContext());
         IntentFilter filter = new IntentFilter();
-        manager.registerReceiver(this,filter);
     }
 
     public void checkPermission(){
@@ -151,12 +138,11 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
             showToast("予期せぬ測位方式");
         }
         L.d("before startService");
-        activity.startService(locationserviceIntent);
         L.d("after startService");
-        //activity.registerReceiver(locationReceiver,filter);
-        activity.registerReceiver(this,filter);
+        activity.registerReceiver(locationReceiver,filter);
 
         activity.bindService(locationserviceIntent,runService ,Context.BIND_AUTO_CREATE);
+        activity.startService(locationserviceIntent);
 
     }
 
@@ -166,16 +152,6 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
     public void locationStop(){
         L.d("locationStop");
 
-        //ServiceConnectionの削除
-        /*
-        L.d("ServiceConnectionの削除");
-        if(runService != null) {
-            if (isServiceRunning(activity, runService.getClass())) {
-                L.d("unbindService");
-                activity.unbindService(runService);
-            }
-        }
-        */
         L.d("ServiceConnectionの削除");
         if(runService != null) {
             L.d("unbindService");
@@ -195,16 +171,6 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
                 e.printStackTrace();
             }
         }
-
-//        //Receiverの消去
-//        L.d("Receiverの消去");
-//        try {
-//            if (locationReceiver != null) {
-//                activity.unregisterReceiver(locationReceiver);
-//            }
-//        }catch (IllegalArgumentException e){
-//            e.printStackTrace();
-//        }
 
         //logファイルの終了
         L.d("logファイルの終了");
@@ -229,171 +195,111 @@ public class PowerSurveyPresenter extends BroadcastReceiver{
         activity.showToast(message);
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        Bundle bundle = intent.getExtras();
-        receiveCategory = bundle.getString(activity.getResources().getString(R.string.category));
+    /**
+     * 測位結果を受けとるためのReceiver
+     */
+    public class LocationReceiver extends BroadcastReceiver {
+        Boolean isFix;
+        double lattude, longitude, ttff;
+        long fixtimeEpoch;
+        String fixtimeUTC;
+        String locationStarttime, locationStoptime;
 
-        //Serviceから測位結果を受け取り
-        if (receiveCategory.equals(categoryLocation)) {
-            location = bundle.getParcelable(activity.getResources().getString(R.string.TagLocation));
-            isFix = bundle.getBoolean(activity.getResources().getString(R.string.TagisFix));
-            locationStarttime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStarttime)));
-            locationStoptime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStoptime)));
-            if (isFix) {
-                lattude = location.getLatitude();
-                longitude = location.getLongitude();
-                fixtimeEpoch = location.getTime();
-                fixtimeUTC = fixTimeFormat.format(fixtimeEpoch);
-            } else {
-                lattude = -1;
-                longitude = -1;
-                fixtimeEpoch = -1;
-                fixtimeUTC = "-1";
+        Location location = new Location(LocationManager.GPS_PROVIDER);
+        SimpleDateFormat fixTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZ");
+        SimpleDateFormat simpleDateFormatHH = new SimpleDateFormat("HH:mm:ss.SSS");
+
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+
+            receiveCategory = bundle.getString(activity.getResources().getString(R.string.category));
+
+            //Serviceから測位結果を受け取り
+            if (receiveCategory.equals(categoryLocation)) {
+                location = bundle.getParcelable(activity.getResources().getString(R.string.TagLocation));
+                isFix = bundle.getBoolean(activity.getResources().getString(R.string.TagisFix));
+                locationStarttime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStarttime)));
+                locationStoptime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStoptime)));
+                if (isFix) {
+                    lattude = location.getLatitude();
+                    longitude = location.getLongitude();
+                    fixtimeEpoch = location.getTime();
+                    fixtimeUTC = fixTimeFormat.format(fixtimeEpoch);
+                } else {
+                    lattude = -1;
+                    longitude = -1;
+                    fixtimeEpoch = -1;
+                    fixtimeUTC = "-1";
+                }
+                ttff = bundle.getDouble(activity.getResources().getString(R.string.Tagttff));
+                L.d("onReceive");
+                L.d(locationStarttime + "," + locationStoptime + "," + isFix + "," + lattude + "," + longitude + "," + ttff + ","
+                        + fixtimeEpoch + "," + fixtimeUTC + "\n");
+                //ログ出力あり設定の場合ログに結果書き込み
+                if(isOutputLog) {
+                    locationLog.writeLog(
+                            locationStarttime + "," + locationStoptime + "," + isFix + "," + location.getLatitude() + "," + location.getLongitude()
+                                    + "," + ttff + "," + location.getAccuracy() + "," + fixtimeEpoch + "," + fixtimeUTC);
+                }
+                activity.showTextViewResult("測位成否：" + isFix + "\n" + "緯度:" + lattude + "\n" + "経度:" + longitude + "\n" + "経過時間：" + ttff
+                        + "\n" + "fixTimeEpoch:" + fixtimeEpoch + "\n" + "fixTimeUTC:" + fixtimeUTC + "\n");
+
+                activity.showTextViewState(activity.getResources().getString(R.string.locationWait));
+            } else if (receiveCategory.equals(categoryColdStart)) {
+                L.d("ReceiceColdStart");
+                activity.showTextViewState(activity.getResources().getString(R.string.locationPositioning));
+                showToast("アシストデータ削除中");
+            } else if (receiveCategory.equals(categoryColdStop)) {
+                L.d("ReceiceColdStop");
+                showToast("アシストデータ削除終了");
+            } else if (receiveCategory.equals(categoryServiceStop)) {
+                L.d("ServiceStop");
+                activity.showTextViewState(activity.getResources().getString(R.string.locationStop));
+                showToast("測位サービス終了");
+                activity.onBtnStart();
+                activity.offBtnStop();
+                activity.onBtnSetting();
+
+            }else{
+                showToast("予期せぬカテゴリー");
             }
-            ttff = bundle.getDouble(activity.getResources().getString(R.string.Tagttff));
-            L.d("onReceive");
-            L.d(locationStarttime + "," + locationStoptime + "," + isFix + "," + lattude + "," + longitude + "," + ttff + ","
-                    + fixtimeEpoch + "," + fixtimeUTC + "\n");
-            //ログ出力あり設定の場合ログに結果書き込み
-            if (isOutputLog) {
-                locationLog.writeLog(
-                        locationStarttime + "," + locationStoptime + "," + isFix + "," + location.getLatitude() + "," + location.getLongitude()
-                                + "," + ttff + "," + location.getAccuracy() + "," + fixtimeEpoch + "," + fixtimeUTC);
-            }
-            activity.showTextViewResult("測位成否：" + isFix + "\n" + "緯度:" + lattude + "\n" + "経度:" + longitude + "\n" + "経過時間：" + ttff
-                    + "\n" + "fixTimeEpoch:" + fixtimeEpoch + "\n" + "fixTimeUTC:" + fixtimeUTC + "\n");
+        }
 
-            activity.showTextViewState(activity.getResources().getString(R.string.locationWait));
-        } else if (receiveCategory.equals(categoryColdStart)) {
-            L.d("ReceiceColdStart");
-            activity.showTextViewState(activity.getResources().getString(R.string.locationPositioning));
-            showToast("アシストデータ削除中");
-        } else if (receiveCategory.equals(categoryColdStop)) {
-            L.d("ReceiceColdStop");
-            showToast("アシストデータ削除終了");
-        } else if (receiveCategory.equals(categoryServiceStop)) {
-            L.d("ServiceStop");
-            activity.showTextViewState(activity.getResources().getString(R.string.locationStop));
-            showToast("測位サービス終了");
-            activity.onBtnStart();
-            activity.offBtnStop();
-            activity.onBtnSetting();
-
-        } else if (receiveCategory.equals(activity.getResources().getString(R.string.categoryWaitStartTimeEnd))) {
-            L.d("Receive waitStartTimeEnd");
-            locationStart();
-
-        } else if (receiveCategory.equals(activity.getResources().getString(R.string.categoryTrackingTimeEnd))) {
-            L.d("Receive trackingTimeEnd");
-            locationStop();
-        } else if (receiveCategory.equals(activity.getResources().getString(R.string.categoryIntervalTimeEnd))) {
-            L.d("Receive intervalTimeEnd");
-            locationStart();
-        } else {
-            showToast("予期せぬカテゴリー");
+        public void unreggister() {
+            activity.unregisterReceiver(this);
         }
     }
-    public void unreggister() {
-        activity.unregisterReceiver(this);
-    }
 
-//    /**
-//     * 測位結果を受けとるためのReceiver
-//     */
-//    public class LocationReceiver extends BroadcastReceiver {
-//        Boolean isFix;
-//        double lattude, longitude, ttff;
-//        long fixtimeEpoch;
-//        String fixtimeUTC;
-//        String locationStarttime, locationStoptime;
-//
-//        Location location = new Location(LocationManager.GPS_PROVIDER);
-//        SimpleDateFormat fixTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZ");
-//        SimpleDateFormat simpleDateFormatHH = new SimpleDateFormat("HH:mm:ss.SSS");
-//
-//
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            Bundle bundle = intent.getExtras();
-//            String action = "";
-//
-//            if(intent.getAction() != null) {
-//                action = intent.getAction();
-//            }
-//            receiveCategory = bundle.getString(activity.getResources().getString(R.string.category));
-//
-//            //Serviceから測位結果を受け取り
-//            if (receiveCategory.equals(categoryLocation)) {
-//                location = bundle.getParcelable(activity.getResources().getString(R.string.TagLocation));
-//                isFix = bundle.getBoolean(activity.getResources().getString(R.string.TagisFix));
-//                locationStarttime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStarttime)));
-//                locationStoptime = simpleDateFormatHH.format(bundle.getLong(activity.getResources().getString(R.string.TagLocationStoptime)));
-//                if (isFix) {
-//                    lattude = location.getLatitude();
-//                    longitude = location.getLongitude();
-//                    fixtimeEpoch = location.getTime();
-//                    fixtimeUTC = fixTimeFormat.format(fixtimeEpoch);
-//                } else {
-//                    lattude = -1;
-//                    longitude = -1;
-//                    fixtimeEpoch = -1;
-//                    fixtimeUTC = "-1";
-//                }
-//                ttff = bundle.getDouble(activity.getResources().getString(R.string.Tagttff));
-//                L.d("onReceive");
-//                L.d(locationStarttime + "," + locationStoptime + "," + isFix + "," + lattude + "," + longitude + "," + ttff + ","
-//                        + fixtimeEpoch + "," + fixtimeUTC + "\n");
-//                //ログ出力あり設定の場合ログに結果書き込み
-//                if(isOutputLog) {
-//                    locationLog.writeLog(
-//                            locationStarttime + "," + locationStoptime + "," + isFix + "," + location.getLatitude() + "," + location.getLongitude()
-//                                    + "," + ttff + "," + location.getAccuracy() + "," + fixtimeEpoch + "," + fixtimeUTC);
-//                }
-//                activity.showTextViewResult("測位成否：" + isFix + "\n" + "緯度:" + lattude + "\n" + "経度:" + longitude + "\n" + "経過時間：" + ttff
-//                        + "\n" + "fixTimeEpoch:" + fixtimeEpoch + "\n" + "fixTimeUTC:" + fixtimeUTC + "\n");
-//
-//                activity.showTextViewState(activity.getResources().getString(R.string.locationWait));
-//            } else if (receiveCategory.equals(categoryColdStart)) {
-//                L.d("ReceiceColdStart");
-//                activity.showTextViewState(activity.getResources().getString(R.string.locationPositioning));
-//                showToast("アシストデータ削除中");
-//            } else if (receiveCategory.equals(categoryColdStop)) {
-//                L.d("ReceiceColdStop");
-//                showToast("アシストデータ削除終了");
-//            } else if (receiveCategory.equals(categoryServiceStop)) {
-//                L.d("ServiceStop");
-//                activity.showTextViewState(activity.getResources().getString(R.string.locationStop));
-//                showToast("測位サービス終了");
-//                activity.onBtnStart();
-//                activity.offBtnStop();
-//                activity.onBtnSetting();
-//
-//            }else{
-//                showToast("予期せぬカテゴリー");
-//            }
-//
-//            if (action.equals(R.string.waitStartTimeEnd)) {
-//                L.d("Receive waitStartTimeEnd");
-//                locationStart();
-//
-//            } else if (action.equals(R.string.trackingTimeEnd)) {
-//                L.d("Receive trackingTimeEnd");
-//                locationStop();
-//            } else if (action.equals(R.string.intervalTimeEnd)){
-//                L.d("Receive intervalTimeEnd");
-//                locationStart();
-//
-//            }else{
-//                L.d("予期せぬTimerEnd");
-//            }
-//
-//        }
-//
-//        public void unreggister() {
-//            activity.unregisterReceiver(this);
-//        }
-//    }
+    /**
+     * Timer満了を受信するReceiver
+     */
+    public static class TimerReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            L.d("TimeReceiver_onReveive");
+            String action;
+            action = intent.getAction();
+
+            Intent startServiceIntent = new Intent(context, TrackingService.class);
+
+            if(action.equals("waitStartTimerEnd")) {
+                startServiceIntent.putExtra("method", "locationStart");
+            }else if(action.equals("trackingTimerEnd")){
+                startServiceIntent.putExtra("method","locationStop");
+            }else if(action.equals(("intervalTImeEnd"))){
+                startServiceIntent.putExtra("method","locationStart");
+            }
+            context.startService(startServiceIntent);
+
+
+        }
+
+        public void unreggister() {
+        }
+    }
 
 
 
