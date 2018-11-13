@@ -177,6 +177,7 @@ public class PowerSurveyPresenter{
         if(locationLog != null) {
             locationLog.endLogFile();
         }
+
     }
 
     /**

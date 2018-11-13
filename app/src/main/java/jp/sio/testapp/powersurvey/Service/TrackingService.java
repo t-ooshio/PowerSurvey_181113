@@ -43,6 +43,13 @@ public class TrackingService extends Service implements LocationListener {
     private  TrackingTimerTask trakcingTimerTask;
     private  IntervalTimerTask intervalTimerTask;
 
+    private AlarmManager waitStartAlarm;
+    private AlarmManager trackingAlarm;
+    private AlarmManager intervalAlarm;
+    private PendingIntent waitStartPending;
+    private PendingIntent trackingPending;
+    private PendingIntent intervalPending;
+
     //設定値の格納用変数
     private  final String locationType = "TRACKING";
     private  int settingWaitStartTime;
@@ -221,9 +228,6 @@ public class TrackingService extends Service implements LocationListener {
             intervalTimer.cancel();
             intervalTimer = null;
         }
-        //Serviceを終わるときにForegroundも停止する
-        stopForeground(true);
-        sendServiceEndBroadCast();
 
         if(wakeLock != null) {
             wakeLock.release();
@@ -232,6 +236,26 @@ public class TrackingService extends Service implements LocationListener {
         if (powerManager != null) {
             powerManager = null;
         }
+
+        if(waitStartAlarm != null){
+            waitStartAlarm.cancel(waitStartPending);
+            waitStartPending.cancel();
+        }
+
+        if(trackingAlarm != null){
+            trackingAlarm.cancel(waitStartPending);
+            waitStartPending.cancel();
+        }
+
+        if(intervalAlarm != null){
+            intervalAlarm.cancel(intervalPending);
+            intervalPending.cancel();
+        }
+
+        //Serviceを終わるときにForegroundも停止する
+        stopForeground(true);
+        sendServiceEndBroadCast();
+
         stopSelf();
     }
 
@@ -403,10 +427,10 @@ public class TrackingService extends Service implements LocationListener {
         L.d("Intent前");
         Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
         intent.setAction("waitStartTimerEnd");
-        PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
-        AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        if(am != null){
-            am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), pending);
+        waitStartPending = PendingIntent.getBroadcast(this,0,intent,0);
+        waitStartAlarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        if(waitStartAlarm != null){
+            waitStartAlarm.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), waitStartPending);
             L.d("setWaitStartAlarm");
         }
     }
@@ -420,10 +444,10 @@ public class TrackingService extends Service implements LocationListener {
         L.d("Intent前");
         Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
         intent.setAction("trackingTimerEnd");
-        PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
-        AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        if(am != null){
-            am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), pending);
+        waitStartPending= PendingIntent.getBroadcast(this,0,intent,0);
+        trackingAlarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        if(trackingAlarm != null){
+            trackingAlarm.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), waitStartPending);
             L.d("trackingTimer");
         }
     }
@@ -436,10 +460,10 @@ public class TrackingService extends Service implements LocationListener {
         L.d("Intent前");
         Intent intent = new Intent(getApplicationContext(),PowerSurveyPresenter.TimerReceiver.class);
         intent.setAction("intervalTImeEnd");
-        PendingIntent pending = PendingIntent.getBroadcast(this,0,intent,0);
-        AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        if(am != null){
-            am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), pending);
+        intervalPending = PendingIntent.getBroadcast(this,0,intent,0);
+        intervalAlarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        if(intervalAlarm != null){
+            intervalAlarm.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(), intervalPending);
             L.d("IntervalTimer");
         }
     }
